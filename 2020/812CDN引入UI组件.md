@@ -27,7 +27,7 @@ module.exports = {
 
 **注意：对于基于vue开发的UI组件库，vue也必须通过CDN引入，而且注意顺序在组件库之前。这是为了保证UI组件库运行时，vue实例已经存在。**
 
-## 配置了externals却无效？
+## CDN结合webpack
 
 我在index.html里CDN引入了vue和at-ui组件库，并对其进行了测试：
 
@@ -58,9 +58,10 @@ module.exports = {
 </html>
 ```
 
-这样做是能正常显示按钮的，于是我继续推进，想在vue文件里使用它们，在入口文件index.js进行了配置:
+这样做是能正常显示按钮的，于是我继续推进，想在vue文件里使用它们，于是做了如下配置:
 
 ```js
+// index.js
 import Vue from 'vue';
 import App from './App.vue';
 
@@ -70,4 +71,105 @@ new Vue({
 })
 ```
 
-在App.vue里
+```js
+// webpack.common.js
+
+const path = require('path');
+const vueLoaderPlugin = require('vue-loader/lib/plugin');
+
+module.exports = {
+  entry: {
+    index: path.join(__dirname, '../src/index.js')
+  },
+  output: {
+    filename: '[name]-[hash:6].js',
+    path: path.join(__dirname, './dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        use: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [
+    new vueLoaderPlugin()
+  ],
+  externals: {
+    'vue': 'Vue',
+    'at-ui': 'at'
+  },
+  resolve: {
+    extensions: ['.js']
+  }
+}
+```
+
+```html
+// App.vue
+
+<template>
+  <div id="app-instance">
+    hello
+    <at-button type="primary">click me</at-button>
+  </div>
+</template>
+
+<script>
+export default {
+  
+}
+</script>
+
+<style>
+
+</style>
+```
+
+然后启动webpack，很遗憾，页面显示的是项目结构，而不是期望的vue实例。这是为什么呢？最后意识到是没有指定模版html文件，所以继续配置webpack.common.js:
+
+```js
+// webpack.common.js
+
+const path = require('path');
+const vueLoaderPlugin = require('vue-loader/lib/plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+  entry: {
+    index: path.join(__dirname, '../src/index.js')
+  },
+  output: {
+    filename: '[name]-[hash:6].js',
+    path: path.join(__dirname, './dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        use: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+        filename: 'index.html',
+        template: path.join(__dirname, '../src/assets/index.html'),
+        chunks: ['index']
+    }),
+    new vueLoaderPlugin()
+  ],
+  externals: {
+    'vue': 'Vue',
+    'at-ui': 'at'
+  },
+  resolve: {
+    extensions: ['.js']
+  }
+}
+```
+
+再次启动webpack，发现输出文件里存在index.html了，浏览器也能显示按钮了，大功告成！！
