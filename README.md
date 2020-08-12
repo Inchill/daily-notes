@@ -1,6 +1,8 @@
 # daily-notes
 
-Record daily problems and solutions.
+记录每天的问题及解决方法。
+
+> Record daily problems and solutions.
 
 ## 为什么会有daily-notes？
 
