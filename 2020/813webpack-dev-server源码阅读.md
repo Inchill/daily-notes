@@ -20,7 +20,7 @@ const webpackDevMiddleware = require('webpack-dev-middleware');
 // Server.js
 
 class Server {
-    constructor(compiler, options = {}, _log) {
+  constructor(compiler, options = {}, _log) {
     if (options.lazy && !options.filename) {
       throw new Error("'filename' option must be set in lazy mode.");
     }
@@ -109,5 +109,17 @@ class Server {
 }
 ```
 
-在启动webpack-dev-server时，构造函数接收了3个参数，分别是compiler、options、_log。compiler是webpack构建时创建的实例，options则是用户创建的配置项，而_log是一个可选项，如果用户没有传递这个参数，构造函数会调用
+我们可以顺着构造函数来一步一步分析webpack-dev-server是如何运行的。
+
+### 什么是lazy mode？
+
+原文如下：
+
+> This option lets you reduce the compilations in lazy mode. By default in lazy mode, every request results in a new compilation. With filename, it's possible to only compile when a certain file is requested.
+
+
+
+在启动webpack-dev-server时，构造函数接收了3个参数，分别是compiler、options、_log。compiler是webpack构建时创建的实例，options则是用户创建的配置项，而_log是一个可选项，如果用户没有传递这个参数，构造函数会调用createLogger(options)函数创建日志实例。
+
+
 
