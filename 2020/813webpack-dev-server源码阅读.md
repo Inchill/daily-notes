@@ -313,7 +313,7 @@ this.websocketProxies.forEach(function(wsProxy) {
 }, this);
 ```
 
-setupHooks()负责将invalidPlugin挂载到webpack实例compiler的compiler、invalid、done钩子函数上，setupApp()负责实例化一个express对象。webpack-dev-server的核心部分是采用的webpack-dev-middleware中间件，这个中间件的作用呢，简单总结为以下三点：
+setupHooks()负责将invalidPlugin挂载到webpack实例compiler的compiler、invalid、done钩子函数上，setupApp()负责实例化一个express对象。其他特性设置，比如压缩、路由监听、设置代理、设置静态资源托管等就不一一分析了，这里主要分析核心。webpack-dev-server的核心部分是采用的webpack-dev-middleware中间件，这个中间件的作用呢，简单总结为以下三点：
 
 1. 通过watch mode，监听资源的变更，然后自动打包;
 
@@ -323,7 +323,7 @@ setupHooks()负责将invalidPlugin挂载到webpack实例compiler的compiler、in
 
 webpack明明可以用watch mode，可以实现一样的效果，但是为什么还需要这个中间件呢？
 
-只依赖webpack的watch mode来监听文件变更，自动打包，每次变更，都将新文件打包到硬盘，就会很慢。
+因为webpack的watch mode来监听文件变更，自动打包，每次变更都将新文件打包到硬盘，就会很慢。
 
 ```js
 setupDevMiddleware() {
@@ -333,4 +333,11 @@ setupDevMiddleware() {
     Object.assign({}, this.options, { logLevel: this.log.options.level })
   );
 }
+
+setupMiddleware() {
+  this.app.use(this.middleware);
+}
 ```
+
+这里传递了2个参数，webpack实例compiler和配置项options，然后再挂载中间件到app上，最后启动服务器。
+
