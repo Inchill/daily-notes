@@ -207,4 +207,110 @@ if (compiler.compilers) {
 
 由于webpack配置文件可能有多个，比如我们在开发中喜欢配置common、dev、prod配置文件。在这里先定义一个空的webpackConfig数组和compilers数组，再遍历compiler的compilers数组，将options配置项push进去，以及将遍历的每一个compiler保存在数组中。如果当前compiler配置项没有配置inline模式，则push到compilersWithoutHMR数组中。
 
-如果
+如果是单文件入口，webpackConfig直接是传进来的options，compilers数组只保存一个compiler即可。同理，未配置inline模式的，push到compilersWithoutHMR数组中。
+
+3. 添加入口文件并自动加载各个模块
+
+```js
+addEntries(webpackConfig, options);
+compilers.forEach((compiler) => {
+  const config = compiler.options;
+  compiler.hooks.entryOption.call(config.context, config.entry);
+
+  const providePlugin = new webpack.ProvidePlugin({
+    __webpack_dev_server_client__: getSocketClientPath(options),
+  });
+  providePlugin.apply(compiler);
+});
+```
+
+ProvidePlugin的使用，会自动加载模块，不用到处import或require。关于ProvidePlugin具体用法，请阅读[ProvidePlugin](https://www.webpackjs.com/plugins/provide-plugin/)
+
+4. 开启热更新
+
+```js
+if (options.hot || options.hotOnly) {
+  compilersWithoutHMR.forEach((compiler) => {
+    // addDevServerEntrypoints above should have added the plugin
+    // to the compiler options
+    const plugin = findHMRPlugin(compiler.options);
+    if (plugin) {
+      plugin.apply(compiler);
+    }
+  });
+}
+```
+
+### 初始化webpack-dev-server启动所需配置项
+
+```js
+this.heartbeatInterval = 30000;
+// this.SocketServerImplementation is a class, so it must be instantiated before use
+this.socketServerImplementation = getSocketServerImplementation(
+  this.options
+);
+
+this.originalStats =
+  this.options.stats && Object.keys(this.options.stats).length
+    ? this.options.stats
+    : {};
+
+this.sockets = [];
+this.contentBaseWatchers = [];
+
+// TODO this.<property> is deprecated (remove them in next major release.) in favor this.options.<property>
+this.hot = this.options.hot || this.options.hotOnly;
+this.headers = this.options.headers;
+this.progress = this.options.progress;
+
+this.serveIndex = this.options.serveIndex;
+
+this.clientOverlay = this.options.overlay;
+this.clientLogLevel = this.options.clientLogLevel;
+
+this.publicHost = this.options.public;
+this.allowedHosts = this.options.allowedHosts;
+this.disableHostCheck = !!this.options.disableHostCheck;
+
+this.watchOptions = options.watchOptions || {};
+
+// Replace leading and trailing slashes to normalize path
+this.sockPath = `/${
+  this.options.sockPath
+    ? this.options.sockPath.replace(/^\/|\/$/g, '')
+    : 'sockjs-node'
+}`;
+```
+
+### 创建并运行webpack-dev-server
+
+```js
+if (this.progress) {
+  this.setupProgressPlugin();
+}
+
+this.setupHooks();
+this.setupApp();
+this.setupCheckHostRoute();
+this.setupDevMiddleware();
+
+// set express routes
+routes(this);
+
+// Keep track of websocket proxies for external websocket upgrade.
+this.websocketProxies = [];
+
+this.setupFeatures();
+this.setupHttps();
+this.createServer();
+
+killable(this.listeningApp);
+
+// Proxy websockets without the initial http request
+// https://github.com/chimurai/http-proxy-middleware#external-websocket-upgrade
+this.websocketProxies.forEach(function(wsProxy) {
+  this.listeningApp.on('upgrade', wsProxy.upgrade);
+}, this);
+```
+
+setupHooks()负责将invalidPlugin挂载到webpack实例compiler的compiler、invalid、done钩子函数上，setupApp()负责实例化一个express对象。
