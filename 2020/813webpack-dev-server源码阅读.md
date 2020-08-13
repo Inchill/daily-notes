@@ -117,9 +117,47 @@ class Server {
 
 > This option lets you reduce the compilations in lazy mode. By default in lazy mode, every request results in a new compilation. With filename, it's possible to only compile when a certain file is requested.
 
+翻译过来就是：此选项使您可以在惰性模式下减少编译。 缺省情况下，在惰性模式下，每个请求都将导致一个新的编译。 使用文件名，可以仅在请求特定文件时进行编译。
 
+**需要注意的是，filename需要和output.filename一致。**
+
+明白了这些，再来看第一部分逻辑：
+
+```js
+if (options.lazy && !options.filename) {
+  throw new Error("'filename' option must be set in lazy mode.");
+}
+```
+
+这里是错误处理，先看配置项是否有错误，有错误就不用再浪费时间执行后续代码了。在开启惰性模式的情况下没有配置filename，就会抛出这个错误。
+
+### 配置项校验
+
+接下来执行的是validateOptions(schema, options, 'webpack Dev Server')函数，这里对传进来的配置项进行校验，其中validateOptions是第三方库提供的：
+
+```js
+const validateOptions = require('schema-utils');
+const schema = require('./options.json');
+```
+
+options.json文件是与Server.js同级的json文件，定义了配置项的格式规范。这一步是对配置文件进行校验。
+
+### 赋值操作
+
+```js
+this.compiler = compiler;
+this.options = options;
+
+this.log = _log || createLogger(options);
+```
 
 在启动webpack-dev-server时，构造函数接收了3个参数，分别是compiler、options、_log。compiler是webpack构建时创建的实例，options则是用户创建的配置项，而_log是一个可选项，如果用户没有传递这个参数，构造函数会调用createLogger(options)函数创建日志实例。
+
+### 更新compiler
+
+在执行这一步之前，运行了一个函数normalizeOptions(this.compiler, this.options)，不过这不是重点，重点是updateCompiler(this.compiler, this.options)函数。这个函数是在utils文件夹下的工具函数，我们来看看这个函数内部具体是怎样的：
+
+
 
 
 
