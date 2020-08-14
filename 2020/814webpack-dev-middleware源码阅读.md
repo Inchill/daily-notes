@@ -36,3 +36,18 @@ const defaults = {
 
 createContext接收两个参数：compiler、options，返回一个context上下文对象。
 
+在函数内部，首先创建一个context对象，函数的后续操作就是对这个context对象属性一一赋值。
+
+```js
+const context = {
+  state: false,
+  webpackStats: null,
+  callbacks: [],
+  options,
+  compiler,
+  watching: null,
+  forceRebuild: false,
+};
+```
+
+
