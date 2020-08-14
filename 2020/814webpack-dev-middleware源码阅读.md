@@ -101,4 +101,8 @@ context.watching = compiler.watch(options.watchOptions, (err) => {
 
 返回中间件对象时调用了Object.assign函数，第一个参数是目标对象middleware(context)，第二个参数是自定义的对象，包含close、invalidate、waitUntilValid三个函数。我们来重点看下middleware(context):
 
+在middleware.js文件里，对外暴露了middleware(context)这个方法，而这个方法又返回一个函数middleware(req, res, next)，用来模拟请求。
+
+在这个函数里，定义了goNext方法，如果是服务端渲染的，直接返回next函数，否则返回一个Promise，在Promise里执行了自定义的ready函数，这个函数接收context、一个匿名函数以及req。
+
 
