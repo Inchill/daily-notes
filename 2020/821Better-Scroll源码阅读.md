@@ -9,6 +9,8 @@ src
 ├─index.js
 ```
 
+在后续源码阅读中，我会在源码里加上注释，便于更少的文字性描述，使得阅读体验更好。
+
 ## `index.js`
 
 `index.js` 文件只做了一件事，对外暴露 `BScroll` 构造函数，这个构造函数接收 2 个参数，分别是 `el` 需要绑定的 DOM 元素和 `options` 配置项。
@@ -204,5 +206,20 @@ BScroll.prototype._watchTransition = function () {
 }
 ```
 
+7. 判断是否支持插件和自动模糊
+
+这两个选项是根据用户来配置的，源码如下：
+
+```js
+// 是否通过插件支持
+if (this.options.observeDOM) {
+  this._initDOMObserver()
+}
+
+// 根据配置自动模糊
+if (this.options.autoBlur) {
+  this._handleAutoBlur()
+}
+```
 
 
