@@ -177,3 +177,32 @@ BScroll.prototype._initExtFeatures = function () {
 ```
 
 6. 调用 `_watchTransition` 方法
+
+```js
+BScroll.prototype._watchTransition = function () {
+  // 这里因为版本比较低，考虑了兼容性问题，因此做了一下判断
+  if (typeof Object.defineProperty !== 'function') {
+    return
+  }
+  let me = this
+  let isInTransition = false
+  let key = this.useTransition ? 'isInTransition' : 'isAnimating'
+  Object.defineProperty(this, key, {
+    get() {
+      return isInTransition
+    },
+    set(newVal) {
+      isInTransition = newVal
+      // fix issue #359
+      let el = me.scroller.children.length ? me.scroller.children : [me.scroller]
+      let pointerEvents = (isInTransition && !me.pulling) ? 'none' : 'auto'
+      for (let i = 0; i < el.length; i++) {
+        el[i].style.pointerEvents = pointerEvents
+      }
+    }
+  })
+}
+```
+
+
+
