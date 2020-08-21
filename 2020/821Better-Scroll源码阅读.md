@@ -34,3 +34,13 @@ function BScroll(el, options) {
 
 官方文档说的是，传入一个 DOM 容器元素，对其第一个子元素添加滚动效果，因此函数里将 DOM 容器元素的第一个子元素赋值给了 scroller 这个变量。同时对滚动样式进行了初始化操作，将 scroller 的 style 样式添加到 BScroll 实例上。
 
+最后一步调用了自身原型上挂载的 `_init` 方法进行真正的初始化。
+
+## init.js
+
+init.js 对外暴露了 initMixin 方法，它接收 BScroll 作为参数，然后在 BScroll 原型上封装了一系列方法。上面提到的 `_init` 方法就是在这个方法里封装的。
+
+### `_init`方法
+
+
+
