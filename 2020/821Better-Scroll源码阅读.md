@@ -137,7 +137,7 @@ export function addEvent(el, type, fn, capture) {
 
 使用这个函数需要传递 4 个参数：元素对象、事件类型、事件处理函数及 `capture`，然后函数内部注册了监听事件。在第三个参数中，`passive: true` 表示会调用 `preventDefault()`，`capture` 表示事件处理函数会在该类型的事件捕获阶段传播到该元素时触发。
 
-5. 调用 `_initExtFeatures()` 方法
+5. 调用 `_initExtFeatures()` 方法添加高级选项配置
 
 ```js
 BScroll.prototype._initExtFeatures = function () {
@@ -153,21 +153,27 @@ BScroll.prototype._initExtFeatures = function () {
   if (this.options.pullUpLoad) {
     this._initPullUp()
   }
-  // 
+  // 是否开启上拉加载功能，默认为 false
   if (this.options.pullDownRefresh) {
     this._initPullDown()
   }
+  // 这个配置是为了做 picker 组件用的，默认为 false，如果开启则需要配置一个 Object
   if (this.options.wheel) {
     this._initWheel()
   }
+  // 是否开启了鼠标滚动条功能
   if (this.options.mouseWheel) {
     this._initMouseWheel()
   }
+  // 是否开启了缩放功能
   if (this.options.zoom) {
     this._initZoom()
   }
+  // 是否开启了无限虚拟长列表滚动
   if (this.options.infinity) {
     this._initInfinite()
   }
 }
 ```
+
+6. 调用 `_watchTransition` 方法
