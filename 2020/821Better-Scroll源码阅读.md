@@ -309,11 +309,19 @@ BScroll.prototype._handleAutoBlur = function () {
 8. 最后操作
 
 ```js
+// 刷新
 this.refresh()
 
+// 是否配置slide
 if (!this.options.snap) {
   this.scrollTo(this.options.startX, this.options.startY)
 }
 
 this.enable()
+```
+
+```js
+BScroll.prototype.enable = function () {
+  this.enabled = true
+}
 ```
