@@ -13,7 +13,7 @@ src
 
 ## `index.js`
 
-`index.js` 文件只做了一件事，对外暴露 `BScroll` 构造函数，这个构造函数接收 2 个参数，分别是 `el` 需要绑定的 DOM 元素和 `options` 配置项。
+`index.js` 文件只做了一件事，对外暴露 `BScroll` 构造函数，这个构造函数接收 2 个参数，分别是 `el` 即需要绑定的 DOM 元素和 `options` 配置项。
 
 ```js
 function BScroll(el, options) {
@@ -42,7 +42,7 @@ function BScroll(el, options) {
 
 `init.js` 对外暴露了 `initMixin` 方法，它接收 `BScroll` 作为参数，然后在 `BScroll` 原型上封装了一系列方法。上面提到的 `_init` 方法就是在这个方法里封装的。
 
-### `_init`方法
+### `_init()`方法
 
 `_init`函数进行了如下的一些操作：
 
@@ -102,7 +102,7 @@ this._events = {}
 // scroll 横纵轴坐标
 this.x = 0
 this.y = 0
-// 判断 scroll 滑动结束后相对于开始滑动位置的方向（左右）
+// 判断 scroll 滑动结束后相对于开始滑动位置的方向（左右)，-1 表示从左向右滑，1 表示从右向左滑，0 表示没有滑动。
 this.directionX = 0
 this.directionY = 0
 ```
@@ -118,7 +118,7 @@ BScroll.prototype.setScale = function (scale) {
 
 在设置缩放比例之前，会保留上一次的缩放比，然后再设置当前缩放比。
 
-4. 调用 `_addDOMEvents()` 方法注册事件
+4. **调用 `_addDOMEvents()` 方法添加原生事件监听回调**
 
 ```js
 BScroll.prototype._addDOMEvents = function () {
@@ -138,6 +138,108 @@ export function addEvent(el, type, fn, capture) {
 ```
 
 使用这个函数需要传递 4 个参数：元素对象、事件类型、事件处理函数及 `capture`，然后函数内部注册了监听事件。在第三个参数中，`passive: true` 表示会调用 `preventDefault()`，`capture` 表示事件处理函数会在该类型的事件捕获阶段传播到该元素时触发。
+
+接下来看一下 `_handleDOMEvents(eventOperation)` 方法：
+
+```js
+BScroll.prototype._handleDOMEvents = function (eventOperation) {
+  let target = this.options.bindToWrapper ? this.wrapper : window
+  eventOperation(window, 'orientationchange', this)  
+  eventOperation(window, 'resize', this)
+
+  if (this.options.click) {
+    eventOperation(this.wrapper, 'click', this, true)
+  }
+
+  if (!this.options.disableMouse) {
+    eventOperation(this.wrapper, 'mousedown', this)
+    eventOperation(target, 'mousemove', this)
+    eventOperation(target, 'mousecancel', this)
+    eventOperation(target, 'mouseup', this)
+  }
+
+  if (hasTouch && !this.options.disableTouch) {
+    eventOperation(this.wrapper, 'touchstart', this)
+    eventOperation(target, 'touchmove', this)
+    eventOperation(target, 'touchcancel', this)
+    eventOperation(target, 'touchend', this)
+  }
+
+  eventOperation(this.scroller, style.transitionEnd, this)
+}
+```
+
+按上述定义，第三个参数是 fn，这里为什么传了个对象进去？MDN 是这样说的，listener 必须是一个实现了 EventListener 接口的对象，或者是一个函数。BScroll 原型上有事件处理函数 `handleEvent`:
+
+```js
+BScroll.prototype.handleEvent = function (e) {
+  switch (e.type) {
+    case 'touchstart':
+    case 'mousedown':
+      this._start(e)
+      if (this.options.zoom && e.touches && e.touches.length > 1) {
+        this._zoomStart(e)
+      }
+      break
+    case 'touchmove':
+    case 'mousemove':
+      if (this.options.zoom && e.touches && e.touches.length > 1) {
+        this._zoom(e)
+      } else {
+        this._move(e)
+      }
+      break
+    case 'touchend':
+    case 'mouseup':
+    case 'touchcancel':
+    case 'mousecancel':
+      if (this.scaled) {
+        this._zoomEnd(e)
+      } else {
+        this._end(e)
+      }
+      break
+    case 'orientationchange':
+    case 'resize':
+      this._resize()
+      break
+    case 'transitionend':
+    case 'webkitTransitionEnd':
+    case 'oTransitionEnd':
+    case 'MSTransitionEnd':
+      this._transitionEnd(e)
+      break
+    case 'click':
+      if (this.enabled && !e._constructed) {
+        if (!preventDefaultException(e.target, this.options.preventDefaultException)) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }
+      break
+    case 'wheel':
+    case 'DOMMouseScroll':
+    case 'mousewheel':
+      this._onMouseWheel(e)
+      break
+  }
+}
+```
+
+然后有一个问题是addEventListener中不是函数而是提供一个具有handleEvent方法的对象，这么做的好处是什么？我们知道addEventListener中如果提供的是一个函数，那么使用removeEventListener清除这个事件监听时要提供一个完全相同的函数才可以。因为我们这里"add"了很多事件回调，因此在最终清除操作的时候，仅仅是因为每个事件的处理函数不同，我们要重复写很多个"remove"的方法。而如果提供的是一个对象的话，即上面的做法，那么清除事件监听时，只需要把addEventListener改为removeEventListener即可，因此_handleDOMEvents把这个操作写成了一个变量，从而在清除事件监听时，可以重用_handleDOMEvents的代码。我们可以在src/scroll/init.js中找到相应的_removeDOMEvents和removeEvent`方法。
+
+```js
+BScroll.prototype._removeDOMEvents = function () {
+  let eventOperation = removeEvent
+  this._handleDOMEvents(eventOperation)
+}
+```
+
+```js
+export function removeEvent(el, type, fn, capture) {
+  el.removeEventListener(type, fn, {passive: false, capture: !!capture})
+}
+```
 
 5. 调用 `_initExtFeatures()` 方法添加高级选项配置
 
@@ -178,7 +280,7 @@ BScroll.prototype._initExtFeatures = function () {
 }
 ```
 
-6. 调用 `_watchTransition` 方法
+6. 调用 `_watchTransition` 方法监听是否处于过渡动画
 
 ```js
 BScroll.prototype._watchTransition = function () {
@@ -306,10 +408,10 @@ BScroll.prototype._handleAutoBlur = function () {
 }
 ```
 
-8. 最后操作
+8. 滚动后重新计算 Better-Scroll
 
 ```js
-// 刷新
+// 发生滚动后重新计算 DOM
 this.refresh()
 
 // 是否配置slide
@@ -317,6 +419,7 @@ if (!this.options.snap) {
   this.scrollTo(this.options.startX, this.options.startY)
 }
 
+// 开启 BS 滚动
 this.enable()
 ```
 
@@ -325,3 +428,91 @@ BScroll.prototype.enable = function () {
   this.enabled = true
 }
 ```
+
+重点看一下 `refresh()` 方法：
+
+```js
+BScroll.prototype.refresh = function () {
+  const isWrapperStatic = window.getComputedStyle(this.wrapper, null).position === 'static'
+  // 获取包裹父容器的宽高
+  let wrapperRect = getRect(this.wrapper)
+  this.wrapperWidth = wrapperRect.width
+  this.wrapperHeight = wrapperRect.height
+
+  // 获取滚动子元素(包裹父容器的第一个子元素)的宽高
+  let scrollerRect = getRect(this.scroller)
+  this.scrollerWidth = Math.round(scrollerRect.width * this.scale)
+  this.scrollerHeight = Math.round(scrollerRect.height * this.scale)
+
+  // scroller相对于包裹父元素wrapper的横纵轴坐标
+  this.relativeX = scrollerRect.left
+  this.relativeY = scrollerRect.top
+
+  // 如果wrapper不具有定位属性
+  if (isWrapperStatic) {
+    this.relativeX -= wrapperRect.left
+    this.relativeY -= wrapperRect.top
+  }
+
+  // 初始化滚动元素scroller的最小横纵滚动距离
+  this.minScrollX = 0
+  this.minScrollY = 0
+
+  // 这个配置是为了做 picker 组件用的，默认为 false
+  const wheel = this.options.wheel
+  if (wheel) {
+    this.items = this.scroller.children
+    // 如果滚动元素有子元素，计算每个子元素的高度
+    this.options.itemHeight = this.itemHeight = this.items.length ? this.scrollerHeight / this.items.length : 0
+    if (this.selectedIndex === undefined) {
+      this.selectedIndex = wheel.selectedIndex || 0
+    }
+    this.options.startY = -this.selectedIndex * this.itemHeight
+    this.maxScrollX = 0
+    this.maxScrollY = -this.itemHeight * (this.items.length - 1)
+  } else {
+    // 滚动元素横向能滚动的最大距离等于wrapper宽度减去滚动元素宽度
+    this.maxScrollX = this.wrapperWidth - this.scrollerWidth
+    if (!this.options.infinity) {
+      this.maxScrollY = this.wrapperHeight - this.scrollerHeight
+    }
+    if (this.maxScrollX < 0) {
+      this.maxScrollX -= this.relativeX
+      this.minScrollX = -this.relativeX
+    } else if (this.scale > 1) {
+      this.maxScrollX = (this.maxScrollX / 2 - this.relativeX)
+      this.minScrollX = this.maxScrollX
+    }
+    if (this.maxScrollY < 0) {
+      this.maxScrollY -= this.relativeY
+      this.minScrollY = -this.relativeY
+    } else if (this.scale > 1) {
+      this.maxScrollY = (this.maxScrollY / 2 - this.relativeY)
+      this.minScrollY = this.maxScrollY
+    }
+  }
+
+  this.hasHorizontalScroll = this.options.scrollX && this.maxScrollX < this.minScrollX
+  this.hasVerticalScroll = this.options.scrollY && this.maxScrollY < this.minScrollY
+
+  if (!this.hasHorizontalScroll) {
+    this.maxScrollX = this.minScrollX
+    this.scrollerWidth = this.wrapperWidth
+  }
+
+  if (!this.hasVerticalScroll) {
+    this.maxScrollY = this.minScrollY
+    this.scrollerHeight = this.wrapperHeight
+  }
+
+  this.endTime = 0
+  this.directionX = 0
+  this.directionY = 0
+  this.wrapperOffset = offset(this.wrapper)
+
+  this.trigger('refresh')
+
+  !this.scaled && this.resetPosition()
+}
+```
+
