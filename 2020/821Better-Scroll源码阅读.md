@@ -222,4 +222,98 @@ if (this.options.autoBlur) {
 }
 ```
 
+- _initDOMObserver函数
 
+```js
+BScroll.prototype._initDOMObserver = function () {
+  if (typeof MutationObserver !== 'undefined') {    // 如果有定义 MutationObserver
+    let timer
+    let observer = new MutationObserver((mutations) => {
+      // don't do any refresh during the transition, or outside of the boundaries
+      if (this._shouldNotRefresh()) {
+        return
+      }
+      let immediateRefresh = false
+      let deferredRefresh = false
+      for (let i = 0; i < mutations.length; i++) {
+        const mutation = mutations[i]
+        if (mutation.type !== 'attributes') {
+          immediateRefresh = true
+          break
+        } else {
+          if (mutation.target !== this.scroller) {
+            deferredRefresh = true
+            break
+          }
+        }
+      }
+      if (immediateRefresh) {
+        this.refresh()
+      } else if (deferredRefresh) {
+        // attributes changes too often
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          if (!this._shouldNotRefresh()) {
+            this.refresh()
+          }
+        }, 60)
+      }
+    })
+    const config = {
+      attributes: true,
+      childList: true,
+      subtree: true
+    }
+    observer.observe(this.scroller, config)
+
+    this.on('destroy', () => {
+      observer.disconnect()
+    })
+  } else {
+    this._checkDOMUpdate()
+  }
+}
+```
+
+什么是 `MutationObserver`?
+
+MutationObserver接口提供了监视对DOM树所做更改的能力。它被设计为旧的Mutation Events功能的替代品，该功能是DOM3 Events规范的一部分。
+
+它具有的方法如下：
+
+disconnect()
+  
+  阻止 MutationObserver 实例继续接收的通知，直到再次调用其observe()方法，该观察者对象包含的回调函数都不会再被调用。
+  
+observe()
+
+  配置MutationObserver在DOM更改匹配给定选项时，通过其回调函数开始接收通知。
+  
+takeRecords()
+
+  从MutationObserver的通知队列中删除所有待处理的通知，并将它们返回到MutationRecord对象的新Array中。
+  
+- _handleAutoBlur函数
+
+```js
+BScroll.prototype._handleAutoBlur = function () {
+  this.on('scrollStart', () => {
+    let activeElement = document.activeElement
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur()
+    }
+  })
+}
+```
+
+8. 最后操作
+
+```js
+this.refresh()
+
+if (!this.options.snap) {
+  this.scrollTo(this.options.startX, this.options.startY)
+}
+
+this.enable()
+```
