@@ -135,62 +135,67 @@ BScroll.prototype._move = function (e) {
     e.stopPropagation()
   }
 
-  // 计算滑动距离
+  // 计算滑动距离差值
   let point = e.touches ? e.touches[0] : e
   let deltaX = point.pageX - this.pointX
   let deltaY = point.pageY - this.pointY
 
+  // 获取当前滚动点在页面的坐标
   this.pointX = point.pageX
   this.pointY = point.pageY
 
+  // 累加滚动距离
   this.distX += deltaX
   this.distY += deltaY
 
+  // 计算滚动距离的绝对值
   let absDistX = Math.abs(this.distX)
   let absDistY = Math.abs(this.distY)
 
+  // 获取滚动结束后的时间
   let timestamp = getNow()
 
-  // 只有滑动超过一定距离才会认为是一次有效的滑动
+  // 只有滑动超过一定时间和距离才会认为是一次有效的滑动
   // We need to move at least momentumLimitDistance pixels for the scrolling to initiate
   if (timestamp - this.endTime > this.options.momentumLimitTime && (absDistY < this.options.momentumLimitDistance && absDistX < this.options.momentumLimitDistance)) {
     return
   }
 
-  // 如果没有开启freeScroll，会根据手指滑动方向，锁定一个滚动方向
+  // 1. 如果没有开启freeScroll（自由滚动），会根据手指滑动方向，锁定一个滚动方向
   // If you are scrolling in one direction lock the other
   if (!this.directionLocked && !this.options.freeScroll) {
-    if (absDistX > absDistY + this.options.directionLockThreshold) {
+    if (absDistX > absDistY + this.options.directionLockThreshold) {   // 水平滚动距离大于垂直滚动距离，设置滚动方向为水平
       this.directionLocked = 'h' // lock horizontally
-    } else if (absDistY >= absDistX + this.options.directionLockThreshold) {
+    } else if (absDistY >= absDistX + this.options.directionLockThreshold) {    // 同上，设置滚动方向为垂直
       this.directionLocked = 'v' // lock vertically
     } else {
-      this.directionLocked = 'n' // no lock
+      this.directionLocked = 'n' // no lock     
     }
   }
 
+  // 2. 如果滚动方向为水平方向
   if (this.directionLocked === 'h') {
-    if (this.options.eventPassthrough === 'vertical') {
+    if (this.options.eventPassthrough === 'vertical') {   // 阻止垂直方向上的默认事件
       e.preventDefault()
     } else if (this.options.eventPassthrough === 'horizontal') {
       this.initiated = false
       return
     }
-    deltaY = 0
-  } else if (this.directionLocked === 'v') {
-    if (this.options.eventPassthrough === 'horizontal') {
+    deltaY = 0   // 设置垂直滚动距离差值为0
+  } else if (this.directionLocked === 'v') {     // 2. 如果滚动方向为垂直方向
+    if (this.options.eventPassthrough === 'horizontal') {   // 阻止水平方向上的默认事件
       e.preventDefault()
     } else if (this.options.eventPassthrough === 'vertical') {
       this.initiated = false
       return
     }
-    deltaX = 0
+    deltaX = 0    // 设置水平滚动距离差值为0
   }
 
-  // 计算新的滚动坐标
-  deltaX = this.hasHorizontalScroll ? deltaX : 0
+  // 3. 计算新的滚动坐标
+  deltaX = this.hasHorizontalScroll ? deltaX : 0   // 判断是哪个方向的滚动并赋值
   deltaY = this.hasVerticalScroll ? deltaY : 0
-  this.movingDirectionX = deltaX > 0 ? DIRECTION_RIGHT : deltaX < 0 ? DIRECTION_LEFT : 0
+  this.movingDirectionX = deltaX > 0 ? DIRECTION_RIGHT : deltaX < 0 ? DIRECTION_LEFT : 0   // 大于0为向右滚动，小于0为向左
   this.movingDirectionY = deltaY > 0 ? DIRECTION_DOWN : deltaY < 0 ? DIRECTION_UP : 0
 
   let newX = this.x + deltaX
@@ -200,9 +205,10 @@ BScroll.prototype._move = function (e) {
   let bottom = false
   let left = false
   let right = false
+  // 如果超出包裹父容器wrapper边界减速或者停止滚动
   // Slow down or stop if outside of the boundaries
   const bounce = this.options.bounce
-  if (bounce !== false) {
+  if (bounce !== false) {   // 如果允许反弹
     top = bounce.top === undefined ? true : bounce.top
     bottom = bounce.bottom === undefined ? true : bounce.bottom
     left = bounce.left === undefined ? true : bounce.left
@@ -210,29 +216,32 @@ BScroll.prototype._move = function (e) {
   }
   if (newX > this.minScrollX || newX < this.maxScrollX) {
     if ((newX > this.minScrollX && left) || (newX < this.maxScrollX && right)) {
-      newX = this.x + deltaX / 3
+      newX = this.x + deltaX / 3    // 只要比实际滚动的距离小，都可以算阻尼。当超过边界时有一种阻力在回拉，这个距离比实际滑动的距离小
     } else {
       newX = newX > this.minScrollX ? this.minScrollX : this.maxScrollX
     }
   }
   if (newY > this.minScrollY || newY < this.maxScrollY) {
     if ((newY > this.minScrollY && top) || (newY < this.maxScrollY && bottom)) {
-      newY = this.y + deltaY / 3
+      newY = this.y + deltaY / 3   // 只要比实际滚动的距离小，都可以算阻尼。当超过边界时有一种阻力在回拉，这个距离比实际滑动的距离小
     } else {
       newY = newY > this.minScrollY ? this.minScrollY : this.maxScrollY
     }
   }
 
+  // 如果已经停止滚动则继续滚动
   if (!this.moved) {
     this.moved = true
     this.trigger('scrollStart')
   }
-
+   
+  // 滚动到新的位置(因为delatX和deltaY大于0，会在边界处产生留白，类似于微信下拉时出现小程序列表一样)
   this._translate(newX, newY)
 
-  // 派发 scroll 事件
-  if (timestamp - this.startTime > this.options.momentumLimitTime) {
-    this.startTime = timestamp
+  // 4. 派发 scroll 事件
+  if (timestamp - this.startTime > this.options.momentumLimitTime) {   // 结束时间减去开始时间的差值大于滚动的最小时间时视为一次有效滚动
+    // 重置新的滚动起始时间、滚动起始坐标
+    this.startTime = timestamp    
     this.startX = this.x
     this.startY = this.y
 
@@ -251,6 +260,7 @@ BScroll.prototype._move = function (e) {
     })
   }
 
+  // 获取元素滚动条到元素左边和顶部的距离（兼容）
   let scrollLeft = document.documentElement.scrollLeft || window.pageXOffset || document.body.scrollLeft
   let scrollTop = document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop
 
@@ -295,14 +305,15 @@ BScroll.prototype._end = function (e) {
     e.stopPropagation()
   }
 
+  // 触发触控结束事件
   this.trigger('touchEnd', {
     x: this.x,
     y: this.y
   })
 
-  this.isInTransition = false
+  this.isInTransition = false  // 不再滚动
 
-  // ensures that the last position is rounded
+  // ensures that the last position is rounded(四舍五入)
   let newX = Math.round(this.x)
   let newY = Math.round(this.y)
 
@@ -334,7 +345,7 @@ BScroll.prototype._end = function (e) {
   let absDistX = Math.abs(newX - this.startX)
   let absDistY = Math.abs(newY - this.startY)
 
-  // flick
+  // flick（轻击）
   if (this._events.flick && duration < this.options.flickLimitTime && absDistX < this.options.flickLimitDistance && absDistY < this.options.flickLimitDistance) {
     this.trigger('flick')
     return
