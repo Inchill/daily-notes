@@ -322,22 +322,26 @@ BScroll.prototype._end = function (e) {
   this.directionX = deltaX > 0 ? DIRECTION_RIGHT : deltaX < 0 ? DIRECTION_LEFT : 0
   this.directionY = deltaY > 0 ? DIRECTION_DOWN : deltaY < 0 ? DIRECTION_UP : 0
 
+  // 下拉刷新
   // if configure pull down refresh, check it first
   if (this.options.pullDownRefresh && this._checkPullDown()) {
     return
   }
 
+  // 点击
   // check if it is a click operation
   if (this._checkClick(e)) {
     this.trigger('scrollCancel')
     return
   }
-
+  
+  // 超出边界时重置位置
   // reset if we are outside of the boundaries
   if (this.resetPosition(this.options.bounceTime, ease.bounce)) {
     return
   }
 
+  // 滚动到新位置
   this._translate(newX, newY)
 
   this.endTime = getNow()
