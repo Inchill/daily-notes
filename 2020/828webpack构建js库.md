@@ -29,7 +29,7 @@ module.exports = {
 
 这种形式打包后生成的Vue，打印之后发现是这样的:
 
-<img src="https://github.com/Inchill/mini-vue/blob/master/images/%E6%88%AA%E5%B1%8F2020-08-28%20%E4%B8%8A%E5%8D%8810.47.01.png">
+<img src="https://github.com/Inchill/mini-vue/blob/master/images/window-vue.png">
 
 然后new Vue实例的时候，控制台会报错：
 
