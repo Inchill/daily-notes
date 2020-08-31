@@ -46,8 +46,8 @@ InfiniteScroller.prototype.onScroll = function () {
   this.anchorScrollTop = scrollTop    // 更改新的锚点为当前的scrollTop
   let lastScreenItem = this._calculateAnchoredItem(this.anchorItem, this.wrapperEl.offsetHeight)  // 根据包裹容器的高度计算上一屏最后一个元素的位置
 
-  let start = this.anchorItem.index
-  let end = lastScreenItem.index
+  let start = this.anchorItem.index    // 开始索引项
+  let end = lastScreenItem.index     // 结束索引项
   if (delta < 0) {     // 向上滚动
     // RUNWAY_ITEMS：要在滚动方向上实例化超出当前视图的项目数。
     start -= RUNWAY_ITEMS
@@ -64,7 +64,26 @@ InfiniteScroller.prototype.onScroll = function () {
 
 在这个函数里多次调用了 `_calculateAnchoredItem` 函数，该函数接收 2 个参数 —— 滚动前的锚点项和滚动后产生的距离差，返回计算后的当前锚点项。根据 delta 判断滚动方向，确定需要实例化多少个项目数。最后调用两个函数：`fill` 和 `maybeRequestContent`，完成附加内容填充和数据请求。
 
+### `onResize` 函数
 
+```js
+InfiniteScroller.prototype.onResize = function () {
+  let tombstone = this.options.createTombstone()   // 创建墓碑 DOM 节点
+  tombstone.style.position = 'absolute'    
+  this.scrollerEl.appendChild(tombstone)     // 将墓碑 DOM 节点添加到滚动元素里
+  tombstone.style.display = ''
+  this.tombstoneHeight = tombstone.offsetHeight    // 获取盒子最终的高
+  this.tombstoneWidth = tombstone.offsetWidth    // 获取盒子最终的宽
+  this.scrollerEl.removeChild(tombstone)
 
+  for (let i = 0; i < this.items.length; i++) {
+    this.items[i].height = this.items[i].width = 0
+  }
+
+  this.onScroll()
+}
+```
+
+`onResize` 的作用是重新计算尺寸。
 
 
