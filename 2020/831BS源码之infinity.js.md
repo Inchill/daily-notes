@@ -84,6 +84,6 @@ InfiniteScroller.prototype.onResize = function () {
 }
 ```
 
-`onResize` 的作用是重新计算尺寸。
+`onResize` 的作用是重新计算尺寸，其中墓碑节点的作用类似于骨架屏，对于什么是骨架屏，可以参考这个<img src="https://upload-images.jianshu.io/upload_images/5595939-5deb0c45881d8120?imageMogr2/auto-orient/strip|imageView2/2/w/830">。
 
 
