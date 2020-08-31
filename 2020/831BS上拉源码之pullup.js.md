@@ -16,4 +16,22 @@ BScroll.prototype._initPullUp = function () {
 }
 ```
 
-这个函数没什么好说的，设置了
+这个函数没什么好说的，设置了 probeType 的类型为实时表示滚动时会实时派发 scroll 事件。关于 probeType，有3种取值，分别是1、2、3，PROBE_DEBOUNCE = 1，PROBE_NORMAL = 2，PROBE_REALTIME = 3。
+
+当 probeType 为 1 的时候，会非实时（屏幕滑动超过一定时间后）派发scroll 事件；当 probeType 为 2 的时候，会在屏幕滑动的过程中实时的派发 scroll 事件；当 probeType 为 3 的时候，不仅在屏幕滑动的过程中，而且在 momentum 滚动动画运行过程中实时派发 scroll 事件。如果没有设置该值，其默认值为 0，即不派发 scroll 事件。
+
+momentum的作用是，当快速在屏幕上滑动一段距离的时候，会根据滑动的距离和时间计算出动量，并生成滚动动画。设置为 true 则开启动画。
+
+## `_watchPullUp`
+
+```js
+BScroll.prototype._watchPullUp = function () {
+  if (this.pullupWatching) {
+    return
+  }
+  this.pullupWatching = true
+  this.on('scroll', this._checkToEnd)
+}
+```
+
+这个函数注册了
