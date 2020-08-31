@@ -62,7 +62,9 @@ InfiniteScroller.prototype.onScroll = function () {
 }
 ```
 
-在这个函数里多次调用了 `_calculateAnchoredItem` 函数，该函数接收 2 个参数 —— 滚动前的锚点项和滚动后产生的距离差，返回计算后的当前锚点项。根据 delta 判断滚动方向，确定需要实例话多少个项目数。最后调用两个函数：
+在这个函数里多次调用了 `_calculateAnchoredItem` 函数，该函数接收 2 个参数 —— 滚动前的锚点项和滚动后产生的距离差，返回计算后的当前锚点项。根据 delta 判断滚动方向，确定需要实例化多少个项目数。最后调用两个函数：`fill` 和 `maybeRequestContent`，完成附加内容填充和数据请求。
+
+
 
 
 
