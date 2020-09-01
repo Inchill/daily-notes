@@ -64,6 +64,36 @@ InfiniteScroller.prototype.onScroll = function () {
 
 在这个函数里多次调用了 `_calculateAnchoredItem` 函数，该函数接收 2 个参数 —— 滚动前的锚点项和滚动后产生的距离差，返回计算后的当前锚点项。根据 delta 判断滚动方向，确定需要实例化多少个项目数。最后调用两个函数：`fill` 和 `maybeRequestContent`，完成附加内容填充和数据请求。
 
+#### `fill`
+
+```js
+InfiniteScroller.prototype.fill = function (start, end) {
+  this.firstAttachedItem = Math.max(0, start)
+  if (!this.hasMore) {
+    end = Math.min(end, this.items.length)
+  }
+  this.lastAttachedItem = end
+  this.attachContent()
+}
+```
+
+`fill` 函数接收两个参数：开始下标和结束下标，以此来确定开始锚点项和结束锚点项的下标，最后调用 `attachContent` 方法添加占位内容。
+
+#### `attachContent`
+
+```js
+InfiniteScroller.prototype.attachContent = function () {
+  let unusedNodes = this._collectUnusedNodes()     // 收集不再使用的节点
+  let tombstoneAnimations = this._createDOMNodes(unusedNodes)     // 显示墓碑节点时的过渡动画（当老节点清除，墓碑节点显示时展示此动画）
+  this._cleanupUnusedNodes(unusedNodes)     // 清除调不再使用的节点
+  this._cacheNodeSize()     // 缓存每个节点的 offset 宽高（如果有实际内容，则仅缓存高度，而不是占位符）
+  let curPos = this._fixScrollPosition()    // 修复滚动条位置
+  this._setupAnimations(tombstoneAnimations, curPos)
+}
+```
+
+`_collectUnusedNodes` 函数是根据 `fill` 函数里确定的开始、结束锚点项来计算不再使用的节点的，在函数内部 for 循环遍历 `items` 数组，根据条件得到不再使用的节点。到此为止，这两个函数的作用是当数据还处于请求阶段时，进行占位，类似于骨架屏。
+
 ### `onResize` 函数
 
 ```js
