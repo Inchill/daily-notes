@@ -8,7 +8,7 @@ BetterScroll 2.0 采用了插件化的架构设计。CoreScroll 作为最小的�
 
 具备完整插件能力的 BetterScroll，不用关心各种插件注册的细节。在这里，core 是核心滚动部分，它作为 BetterScroll 的最小使用单元，压缩体积比 1.0 小了将近三分之一。在 core 的基础上，注册了所有插件，对外暴露了一个完整的 better-scroll。
 
-看到这里我有一个疑问：为什么 BS 通过 use 方法注册了所有插件，还要通过 export 暴露一次（export 导出后，导入需要花括号引入）。问了 2.0 作者，他说因为这里不用的话，typescript不会生成对应的d.ts。想了想，自己还得去系统学习一下 ts。
+看到这里我有一个疑问：为什么 BS 通过 use 方法注册了所有插件，还要通过 export 暴露一次（export 导出后，导入需要花括号按需引入）。问了 2.0 作者，他说因为这里不用的话，typescript不会生成对应的d.ts。想了想，自己还得去系统学习一下 ts。
 
 ```typescript
 import BScroll from '@better-scroll/core'
