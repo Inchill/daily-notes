@@ -1,8 +1,63 @@
 滚动相关的核心代码，主要是手指在屏幕上滑动开始、滑动中、滑动结束三个时间点 better-scroll 都做了哪些事情。理解了 core，再来阅读其他插件源码，就轻松多了。
 
-## `_start()`函数处理滚动开始事件
-
 在 `handleEvent()` 函数中，根据监听事件类型的不同，调用了不同的回调函数。
+
+```js
+BScroll.prototype.handleEvent = function (e) {
+  switch (e.type) {
+    case 'touchstart':
+    case 'mousedown':
+      this._start(e)
+      if (this.options.zoom && e.touches && e.touches.length > 1) {
+        this._zoomStart(e)
+      }
+      break
+    case 'touchmove':
+    case 'mousemove':
+      if (this.options.zoom && e.touches && e.touches.length > 1) {
+        this._zoom(e)
+      } else {
+        this._move(e)
+      }
+      break
+    case 'touchend':
+    case 'mouseup':
+    case 'touchcancel':
+    case 'mousecancel':
+      if (this.scaled) {
+        this._zoomEnd(e)
+      } else {
+        this._end(e)
+      }
+      break
+    case 'orientationchange':
+    case 'resize':
+      this._resize()
+      break
+    case 'transitionend':
+    case 'webkitTransitionEnd':
+    case 'oTransitionEnd':
+    case 'MSTransitionEnd':
+      this._transitionEnd(e)
+      break
+    case 'click':
+      if (this.enabled && !e._constructed) {
+        if (!preventDefaultException(e.target, this.options.preventDefaultException)) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }
+      break
+    case 'wheel':
+    case 'DOMMouseScroll':
+    case 'mousewheel':
+      this._onMouseWheel(e)
+      break
+  }
+}
+```
+
+## `_start()`函数处理滚动开始事件
 
 ```js
 BScroll.prototype._start = function (e) {
