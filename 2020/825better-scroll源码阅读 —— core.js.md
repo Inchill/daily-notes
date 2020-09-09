@@ -34,10 +34,10 @@ BScroll.prototype._start = function (e) {
   // 手指或鼠标的滑动距离
   this.distX = 0
   this.distY = 0
-  // 水平、垂直方向滑动距离
+  // 滑动方向
   this.directionX = 0
   this.directionY = 0
-  // 水平、垂直方向滑动过程中距离
+  // 滑动中方向
   this.movingDirectionX = 0
   this.movingDirectionY = 0
   this.directionLocked = 0
