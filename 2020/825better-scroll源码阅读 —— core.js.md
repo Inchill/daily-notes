@@ -2,60 +2,7 @@
 
 在 `handleEvent()` 函数中，根据监听事件类型的不同，调用了不同的回调函数。
 
-```js
-BScroll.prototype.handleEvent = function (e) {
-  switch (e.type) {
-    case 'touchstart':
-    case 'mousedown':
-      this._start(e)
-      if (this.options.zoom && e.touches && e.touches.length > 1) {
-        this._zoomStart(e)
-      }
-      break
-    case 'touchmove':
-    case 'mousemove':
-      if (this.options.zoom && e.touches && e.touches.length > 1) {
-        this._zoom(e)
-      } else {
-        this._move(e)
-      }
-      break
-    case 'touchend':
-    case 'mouseup':
-    case 'touchcancel':
-    case 'mousecancel':
-      if (this.scaled) {
-        this._zoomEnd(e)
-      } else {
-        this._end(e)
-      }
-      break
-    case 'orientationchange':
-    case 'resize':
-      this._resize()
-      break
-    case 'transitionend':
-    case 'webkitTransitionEnd':
-    case 'oTransitionEnd':
-    case 'MSTransitionEnd':
-      this._transitionEnd(e)
-      break
-    case 'click':
-      if (this.enabled && !e._constructed) {
-        if (!preventDefaultException(e.target, this.options.preventDefaultException)) {
-          e.preventDefault()
-          e.stopPropagation()
-        }
-      }
-      break
-    case 'wheel':
-    case 'DOMMouseScroll':
-    case 'mousewheel':
-      this._onMouseWheel(e)
-      break
-  }
-}
-```
+具体可查看初始化这个文件里怎么做的，[链接](https://github.com/Inchill/daily-notes/blob/master/2020/821Better-Scroll%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB.md)。
 
 ## `_start()`函数处理滚动开始事件
 
