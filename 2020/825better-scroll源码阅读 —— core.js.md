@@ -243,7 +243,7 @@ BScroll.prototype._move = function (e) {
   let scrollLeft = document.documentElement.scrollLeft || window.pageXOffset || document.body.scrollLeft    // 获取元素滚动条到元素左边和顶部的距离（考虑了兼容）
   let scrollTop = document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop
 
-  let pX = this.pointX - scrollLeft      // 手指或鼠标相对于页面的坐标（也就是clientX加上水平滚动条的距离，不是相对可视区页面来算的） - 滚动条向左卷去的距离 = 在可视区的坐标
+  let pX = this.pointX - scrollLeft      // // 手指或鼠标相对于scroll滚动元素的坐标 - 滚动条向左卷去的距离 = 在可视区的坐标
   let pY = this.pointY - scrollTop      // 同上
   
   // 如果滑动到4个视窗边缘则滑动结束（只有在屏幕上快速滑动的距离大于 momentumLimitDistance，才能开启 momentum 动画。）
