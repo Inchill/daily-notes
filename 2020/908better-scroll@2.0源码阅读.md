@@ -1,3 +1,5 @@
+# better-scroll 插件
+
 better-scroll@2.0 版本在最近发布了，其初衷来源于社区的一个需求 —— better-scroll能否支持按需加载。在 better-scroll@1.0 版本中，所有的 feature 都是通过 options 选项并且通过一个 BScroll 类以及扩展原型方法来实现的，这显然是不支持按需加载的。
 
 BetterScroll 2.0 采用了插件化的架构设计。CoreScroll 作为最小的滚动单元，暴露了丰富的事件以及钩子，其余的功能都由不同的插件来扩展，这样会让 BetterScroll 更加的灵活，也能解耦不同的场景。下面是整体的架构图：
