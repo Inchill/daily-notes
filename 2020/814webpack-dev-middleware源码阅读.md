@@ -50,7 +50,7 @@ const context = {
 };
 ```
 
-然后定义done、invalid、rebuild三个钩子函数，因为传进来了compiler对象，webpack本身提供了很多hooks，所以在函数的最后，执行了以下步骤，将定义的钩子函数挂载到compiler实例上。关于webpack钩子函数详情，可以阅读[compiler钩子](https://www.webpackjs.com/api/compiler-hooks/)
+然后定义invalid、run、done、watchRun四个钩子函数，因为传进来了compiler对象，webpack本身提供了很多hooks，所以在函数的最后，执行了以下步骤，将定义的钩子函数挂载到compiler实例上。关于webpack钩子函数详情，可以阅读[compiler钩子](https://www.webpackjs.com/api/compiler-hooks/)
 
 ```js
 context.rebuild = rebuild;
