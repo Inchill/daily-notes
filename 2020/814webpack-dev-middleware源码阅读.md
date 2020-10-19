@@ -4,6 +4,18 @@
 
 当前webpack-dev-middleware项目根目录包含lib和index.js，这属于源码部分。
 
+```
+|——webpack-dev-middleware
+| |—— lib : 核心功能
+| |    |____ context : 上下文相关
+| |    |____ DevMiddlewareError : 继承自 Error 的 错误类
+| |    |____ fs : 文件写入相关
+| |    |____ middleware : 其核心处理逻辑主要针对 request 请求
+| |    |____ reporter : 打印编译信息
+| |    |____ util : 工具函数
+| |——index.js 入口文件，对外暴露一个 wdm 函数
+```
+
 ## index.js
 
 index.js文件对外暴露了一个函数，这个函数接收两个参数：compiler、opts，最终返回一个包装好的中间件对象。
